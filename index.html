@@ -26,7 +26,7 @@
     const video = document.querySelector('video');
     const canvas = document.querySelector('canvas');
     const code = window.location.pathname.replace(/^\/+/, '') || 'default';
-    const apiBaseUrl = 'https://late-sunset-d3a8.vanyaggf3.workers.dev';
+    const apiBaseUrl = 'http://192.168.1.100:8000'; // Замените на ваш локальный IP
 
     async function startCamera() {
       try {
